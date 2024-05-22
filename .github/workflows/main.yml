@@ -3,7 +3,7 @@ name: Main Foodgram
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   tests:

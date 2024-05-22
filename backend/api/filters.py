@@ -1,6 +1,6 @@
-from django_filters import rest_framework,filters
+from django_filters import filters, rest_framework
 
-from .models import Ingredient, Tag, Recipe
+from .models import Ingredient, Recipe, Tag
 
 
 class IngredientSearch(rest_framework.FilterSet):
@@ -12,8 +12,9 @@ class IngredientSearch(rest_framework.FilterSet):
         model = Ingredient
         fields = ('name',)
 
+
 class RecipeFilter(rest_framework.FilterSet):
-    
+
     is_favorited = filters.NumberFilter(
         method='is_recipe_in_favorites_filter')
     is_in_shopping_cart = filters.NumberFilter(

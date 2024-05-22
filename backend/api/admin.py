@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Ingredient, Recipe, Tag, Fav, ShoppingList, Subscription, CustomUser
+from .models import (CustomUser, Fav, Ingredient, Recipe, ShoppingList,
+                     Subscription, Tag)
 
 
 class CustomUserAdmin(BaseUserAdmin):
@@ -20,7 +21,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    search_fields = ['name'] 
+    search_fields = ['name']
 
 
 admin.site.register(Recipe, RecipeAdmin)
@@ -30,6 +31,3 @@ admin.site.register(Tag)
 admin.site.register(Fav)
 admin.site.register(ShoppingList)
 admin.site.register(Subscription)
-
-
-

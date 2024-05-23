@@ -24,7 +24,11 @@ SECRET_KEY = get_random_secret_key()
 
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = ('51.250.25.119',
+                 '127.0.0.1',
+                 'localhost',
+                 'antonyandexlearning.zapto.org',
+                 'kittygramtestanton.zapto.org')
 
 AUTH_USER_MODEL = 'api.CustomUser'
 

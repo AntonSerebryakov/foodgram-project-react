@@ -6,7 +6,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
@@ -21,14 +20,9 @@ from .serializers import (CustomUserCreateSerializer, IngredientSerializer,
                           RecipeListSerializer, SubscribeSerializer,
                           TagSerializer, UserInfoSerializer,
                           UserSubscribesSerializer)
+from .utils import CustomPaginator
 
 User = get_user_model()
-
-
-class CustomPaginator(PageNumberPagination):
-    page_size = 6
-    page_size_query_param = 'limit'
-    max_page_size = 15
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -70,9 +64,7 @@ class UserCustomViewSet(UserViewSet):
             context={'request': request},
             many=True
         )
-        if paginated_queryset is not None:
-            return self.get_paginated_response(serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,

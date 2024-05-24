@@ -3,7 +3,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
+from djoser.views import UserViewSet as AbstractUserViewSet
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
@@ -15,11 +15,11 @@ from .filters import IngredientSearch, RecipeFilter
 from .models import (FavRecipes, Ingredient, Recipe, RecipeIngredient,
                      ShoppingList, Subscription, Tag)
 from .permissions import AuthorAdminOrReadOnly, IsAuthorOrReadOnly
-from .serializers import (CustomUserCreateSerializer, IngredientSerializer,
+from .serializers import (IngredientSerializer,
                           MiniRecipeSerializer, RecipeCreateSerializer,
                           RecipeListSerializer, SubscribeSerializer,
-                          TagSerializer, UserInfoSerializer,
-                          UserSubscribesSerializer)
+                          TagSerializer,
+                          UserSubscribesSerializer, FavRecipeCreateSerializer, ShoppingListSerializer)
 from .utils import CustomPaginator
 
 User = get_user_model()
@@ -28,27 +28,22 @@ User = get_user_model()
 class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_class = [AuthorAdminOrReadOnly, ]
+    permission_class = (AuthorAdminOrReadOnly, )
     pagination_class = None
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    pagination_class = None 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    pagination_class = None
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (DjangoFilterBackend, )
     filterset_class = IngredientSearch
 
 
-class UserCustomViewSet(UserViewSet):
+class UserViewSet(AbstractUserViewSet):
     queryset = User.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = CustomPaginator
-
-    def get_serializer_class(self):
-        if self.action == "create":
-            return CustomUserCreateSerializer
-        return UserInfoSerializer
 
     @action(
         detail=False,
@@ -89,31 +84,16 @@ class UserCustomViewSet(UserViewSet):
             )
         subscription = Subscription.objects.filter(user=request.user,
                                                    author=author)
-        if subscription.exists():
-            subscription.delete()
+
+        deleted_count, _ = subscription.delete()
+        if deleted_count > 0:
             return Response(
                 {'message': 'Вы отписались от автора.'},
                 status=status.HTTP_204_NO_CONTENT
-            )
-        return Response(
-            {'message': 'Вы не подписаны на автора'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    @action(detail=False,
-            methods=['POST'],
-            permission_classes=[IsAuthenticated],)
-    def set_password(self, request):
-        user = request.user
-        current_password = request.data.get('current_password')
-        new_password = request.data.get('new_password')
-        if user.check_password(current_password):
-            user.set_password(new_password)
-            user.save()
-            return Response({'message': 'Пароль успешно изменен.'},
-                            status=status.HTTP_204_NO_CONTENT)
-        return Response({'message': 'Текущий пароль неверный.'},
-                        status=status.HTTP_400_BAD_REQUEST)
+                )
+    
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -137,37 +117,42 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeCreateSerializer
         return RecipeListSerializer
 
+    def add_to_selected(self,serializerClass, request, pk):
+        try:
+            recipe = Recipe.objects.get(id=pk)
+        except Recipe.DoesNotExist:
+            return Response({'message': 'Рецепт не найден'}, status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        serializer = serializerClass(data={'user': user.id, 'recipe': recipe.id},
+                                     context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    def del_selected(self, objectClass, request, pk):    
+        get_object_or_404(Recipe, id=pk)
+        instance = objectClass.objects.filter(user=request.user, recipe__id=pk)
+        deleted_count, _ =instance.delete()
+        if deleted_count > 0:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
     @action(
         methods=('POST', 'DELETE',),
         detail=True,
         permission_classes=(IsAuthenticated,)
     )
     def favorite(self, request, pk):
+        
         if request.method == 'POST':
-            if FavRecipes.objects.filter(user=request.user,
-                                         recipe__id=pk).exists():
-                return Response({'message': 'Рецепт уже в избранном!'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            try:
-                recipe = Recipe.objects.get(id=pk)
-            except Recipe.DoesNotExist:
-                return Response({'message': 'Рецепт не найден'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            fav_item = FavRecipes(user=request.user, recipe=recipe)
-            fav_item.save()
-            serializer = MiniRecipeSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return (self.add_to_selected(FavRecipeCreateSerializer, request, pk))
+            
         elif request.method == 'DELETE':
-            if not Recipe.objects.filter(id=pk).exists():
-                return Response(status=status.HTTP_404_NOT_FOUND)
-            instance = FavRecipes.objects.filter(
-                user=request.user,
-                recipe__id=pk)
-            if instance:
-                instance.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            return self.del_selected(FavRecipes, request, pk)
 
     @action(
         methods=('POST', 'DELETE',),
@@ -177,29 +162,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk):
 
         if request.method == 'POST':
-            if ShoppingList.objects.filter(user=request.user,
-                                           recipe__id=pk).exists():
-                return Response({'message': 'Рецепт уже добавлен!'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            try:
-                recipe = Recipe.objects.get(id=pk)
-            except Recipe.DoesNotExist:
-                return Response({'message': 'Рецепт не найден'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            shopping_list_item = ShoppingList(user=request.user, recipe=recipe)
-            shopping_list_item.save()
-            serializer = MiniRecipeSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return (self.add_to_selected(ShoppingListSerializer, request, pk))
+
         elif request.method == 'DELETE':
-            if not Recipe.objects.filter(id=pk).exists():
-                return Response(status=status.HTTP_404_NOT_FOUND)
-            instance = ShoppingList.objects.filter(user=request.user,
-                                                   recipe__id=pk)
-            if instance:
-                instance.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            return self.del_selected(ShoppingList, request, pk)
+
 
     @action(
         methods=('GET',),
@@ -208,7 +175,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         ingredients = RecipeIngredient.objects.filter(
-            recipe__shopping_reciep__user=request.user
+            recipe__shoppinglist__user=request.user
         ).values(
             'ingredient__name', 'ingredient__measurement_unit'
         ).order_by('ingredient__name').annotate(Sum('amount'))

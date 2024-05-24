@@ -1,12 +1,6 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
-class IsAuthor(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        # Проверяем, является ли пользователь автором объекта
-        return obj.author == request.user
-
-
 class AuthorAdminOrReadOnly(BasePermission):
     message = 'Может быть отредактировано только автором или администратором'
 

@@ -5,8 +5,8 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
-from .models import (Fav, Ingredient, Recipe, RecipeIngredient, ShoppingList,
-                     Subscription, Tag)
+from .models import (FavRecipes, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingList, Subscription, Tag)
 
 User = get_user_model()
 
@@ -119,7 +119,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         return (self.request_user.is_authenticated
-                and Fav.objects.filter(user=self.request_user).exists())
+                and FavRecipes.objects.filter(user=self.request_user).exists())
 
     def get_is_in_shopping_cart(self, obj):
         return (self.request_user.is_authenticated

@@ -12,8 +12,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from .filters import IngredientSearch, RecipeFilter
-from .models import (Fav, Ingredient, Recipe, RecipeIngredient, ShoppingList,
-                     Subscription, Tag)
+from .models import (FavRecipes, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingList, Subscription, Tag)
 from .permissions import AuthorAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (CustomUserCreateSerializer, IngredientSerializer,
                           MiniRecipeSerializer, RecipeCreateSerializer,
@@ -144,7 +144,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk):
         if request.method == 'POST':
-            if Fav.objects.filter(user=request.user, recipe__id=pk).exists():
+            if FavRecipes.objects.filter(user=request.user,
+                                         recipe__id=pk).exists():
                 return Response({'message': 'Рецепт уже в избранном!'},
                                 status=status.HTTP_400_BAD_REQUEST)
             try:
@@ -152,14 +153,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
             except Recipe.DoesNotExist:
                 return Response({'message': 'Рецепт не найден'},
                                 status=status.HTTP_400_BAD_REQUEST)
-            fav_item = Fav(user=request.user, recipe=recipe)
+            fav_item = FavRecipes(user=request.user, recipe=recipe)
             fav_item.save()
             serializer = MiniRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
             if not Recipe.objects.filter(id=pk).exists():
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            instance = Fav.objects.filter(user=request.user, recipe__id=pk)
+            instance = FavRecipes.objects.filter(
+                user=request.user,
+                recipe__id=pk)
             if instance:
                 instance.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)

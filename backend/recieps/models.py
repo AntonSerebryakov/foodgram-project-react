@@ -37,13 +37,12 @@ class Tag(models.Model):
     color = ColorField(default='#FFFFFF', verbose_name='Цвет')
     slug = models.SlugField(max_length=MAX_TAG_SLUG_LENGTH,
                             unique=True,
-                            verbose_name='SLUG'
-                            )
+                            verbose_name='SLUG')
 
     class Meta:
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
-        ordering = ['name']
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
@@ -67,7 +66,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ['-created_at']
+        ordering = ('-created_at',)
 
     def __str__(self):
         return self.name
@@ -90,13 +89,13 @@ class SelectedRecipes(models.Model):
         ordering = ('user', 'recipe',)
         constraints = [
             models.UniqueConstraint(
-                fields=['recipe', 'user'],
+                fields=('recipe', 'user',),
                 name='unique_user_recipe',)
         ]
         abstract = True
 
 
-class FavRecipes(SelectedRecipes):
+class FavoriteRecipes(SelectedRecipes):
     class Meta:
         default_related_name = 'favorites'
         verbose_name = 'Избранные'

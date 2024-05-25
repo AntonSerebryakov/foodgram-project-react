@@ -165,7 +165,7 @@ jobs:
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py makemigrations --no-input          
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate --no-input
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input
-          sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_ingredients data/ingredients.json
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_ingredients
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py create_superuser
 
 

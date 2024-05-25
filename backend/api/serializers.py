@@ -2,11 +2,10 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
+from recieps.models import (FavoriteRecipes, Ingredient, Recipe,
+                            RecipeIngredient, ShoppingList, Subscription, Tag)
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-
-from recieps.models import (FavRecipes, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingList, Subscription, Tag)
 
 User = get_user_model()
 
@@ -83,8 +82,9 @@ class RecipeListSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         return (request and request.user.is_authenticated
-                and FavRecipes.objects.filter(user=request.user,
-                                              recipe=obj).exists())
+                and FavoriteRecipes.objects.filter(
+                    user=request.user,
+                    recipe=obj).exists())
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
@@ -260,11 +260,11 @@ class UserSubscribesSerializer(UserInfoSerializer):
 class FavRecipeCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = FavRecipes
+        model = FavoriteRecipes
         fields = ('recipe', 'user')
         validators = [
             UniqueTogetherValidator(
-                queryset=FavRecipes.objects.all(),
+                queryset=FavoriteRecipes.objects.all(),
                 fields=('recipe', 'user'),
                 message='Вы уже подписаны на этого автора!',
             ),

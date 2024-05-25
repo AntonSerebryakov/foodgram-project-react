@@ -8,14 +8,8 @@ from recieps.models import Ingredient
 class Command(BaseCommand):
     help = 'Imports data from a JSON file into the database'
 
-    def add_arguments(self, parser):
-        parser.add_argument('json_file',
-                            type=str,
-                            help='Path to the JSON '
-                            'file to be imported')
-
     def handle(self, *args, **kwargs):
-        json_file = kwargs['json_file']
+        json_file = 'data/ingredients.json'
         with open(json_file, 'r') as file:
             data = json.load(file)
             for item in data:

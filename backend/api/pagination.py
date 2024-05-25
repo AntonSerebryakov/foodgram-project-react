@@ -1,7 +1,6 @@
 from rest_framework.pagination import PageNumberPagination
 
-PAGE_SIZE = 6
-MAX_PAGE_SIZE = 15
+from .constants import PAGE_SIZE, MAX_PAGE_SIZE
 
 
 class CustomPaginator(PageNumberPagination):

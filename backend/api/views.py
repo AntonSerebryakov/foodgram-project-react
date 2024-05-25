@@ -4,8 +4,6 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as AbstractUserViewSet
-from recieps.models import (FavRecipes, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingList, Subscription, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
@@ -13,13 +11,15 @@ from rest_framework.permissions import (IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from .filters import IngredientSearch, RecipeFilter
-from .permissions import AuthorAdminOrReadOnly, IsAuthorOrReadOnly
-from .serializers import (FavRecipeCreateSerializer, IngredientSerializer,
+from api.filters import IngredientSearch, RecipeFilter
+from api.permissions import AuthorAdminOrReadOnly, IsAuthorOrReadOnly
+from api.serializers import (FavRecipeCreateSerializer, IngredientSerializer,
                           RecipeCreateSerializer, RecipeListSerializer,
                           ShoppingListSerializer, SubscribeSerializer,
                           TagSerializer, UserSubscribesSerializer)
-from .utils import CustomPaginator
+from api.pagination import CustomPaginator
+from recieps.models import (FavRecipes, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingList, Subscription, Tag)
 
 User = get_user_model()
 
@@ -48,8 +48,9 @@ class UserViewSet(AbstractUserViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-        subscriptions = user.subscriber.all()
-        authors = [subscription.author for subscription in subscriptions]
+#        subscriptions = user.subscriber.all()
+#        authors = [subscription.author for subscription in subscriptions]
+        authors = User.objects.filter(subscribers__user=user)
         paginated_queryset = self.paginate_queryset(authors)
         serializer = UserSubscribesSerializer(
             paginated_queryset,

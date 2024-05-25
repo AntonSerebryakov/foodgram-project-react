@@ -1,4 +1,5 @@
 from django_filters import rest_framework
+
 from recieps.models import Ingredient, Recipe, Tag
 
 
@@ -16,7 +17,7 @@ class RecipeFilter(rest_framework.FilterSet):
 
     is_favorited = rest_framework.BooleanFilter(
         method='is_recipe_in_favorites_filter')
-    is_in_shopping_cart = rest_framework.NumberFilter(
+    is_in_shopping_cart = rest_framework.BooleanFilter(
         method='is_recipe_in_shoppingcart_filter')
     tags = rest_framework.ModelMultipleChoiceFilter(
         queryset=Tag.objects.all(),

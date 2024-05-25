@@ -2,7 +2,6 @@ from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.forms import ValidationError
 from django.utils import timezone
 
 from .constants import (MAX_INGREDIENT_LENGTH, MAX_MEASURMENT_UNIT_LENGTH,
@@ -106,40 +105,4 @@ class ShoppingList(SelectedRecipes):
     class Meta:
         default_related_name = 'shoppinglist'
         verbose_name = 'Список покупок'
-        verbose_name_plural = 'Список покупок'
-
-
-class Subscription(models.Model):
-    user = models.ForeignKey(
-        User,
-        verbose_name='Подписчик',
-        related_name='subscriber',
-        on_delete=models.CASCADE,
-    )
-    author = models.ForeignKey(
-        User,
-        verbose_name='Автор рецепта',
-        related_name='author',
-        on_delete=models.CASCADE,
-    )
-
-    def clean(self):
-        if self.user == self.author:
-            raise ValidationError('Нельзя подписаться на себя')
-
-    class Meta:
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
-        constraints = [
-            models.UniqueConstraint(
-                fields=('user', 'author'),
-                name='unique_subscription',
-            ),
-            models.CheckConstraint(
-                check=~models.Q(author=models.F('user')),
-                name='user_not_subscribe_self',
-            ),
-        ]
-
-    def __str__(self):
-        return f'{self.user.username} подписан на {self.author.username}'
+        verbose_name_plural = 'Списоки покупок'

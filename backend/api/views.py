@@ -1,3 +1,16 @@
+from django.contrib.auth import get_user_model
+from django.db.models import Sum
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet as AbstractUserViewSet
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
+from rest_framework.viewsets import ReadOnlyModelViewSet
+
 from api.filters import IngredientSearch, RecipeFilter
 from api.pagination import CustomPaginator
 from api.permissions import AuthorAdminOrReadOnly, IsAuthorOrReadOnly
@@ -5,20 +18,9 @@ from api.serializers import (FavRecipeCreateSerializer, IngredientSerializer,
                              RecipeCreateSerializer, RecipeListSerializer,
                              ShoppingListSerializer, SubscribeSerializer,
                              TagSerializer, UserSubscribesSerializer)
-from django.contrib.auth import get_user_model
-from django.db.models import Sum
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet as AbstractUserViewSet
 from recieps.models import (FavoriteRecipes, Ingredient, Recipe,
-                            RecipeIngredient, ShoppingList, Subscription, Tag)
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
-from rest_framework.response import Response
-from rest_framework.viewsets import ReadOnlyModelViewSet
+                            RecipeIngredient, ShoppingList, Tag)
+from users.models import Subscription
 
 User = get_user_model()
 
@@ -47,9 +49,7 @@ class UserViewSet(AbstractUserViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-#        subscriptions = user.subscriber.all()
-#        authors = [subscription.author for subscription in subscriptions]
-        authors = User.objects.filter(subscribers__user=user)
+        authors = User.objects.filter(subscriber__user=user)
         paginated_queryset = self.paginate_queryset(authors)
         serializer = UserSubscribesSerializer(
             paginated_queryset,
@@ -60,8 +60,8 @@ class UserViewSet(AbstractUserViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
-        permission_classes=(IsAuthenticated,),
+        methods=('post', 'delete',),
+        permission_classes=[IsAuthenticated,],
         serializer_class=SubscribeSerializer
     )
     def subscribe(self, request, id):
@@ -87,7 +87,6 @@ class UserViewSet(AbstractUserViewSet):
             return Response(
                 {'message': 'Вы отписались от автора.'},
                 status=status.HTTP_204_NO_CONTENT)
-
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
@@ -114,9 +113,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def add_to_selected(self, serializer_class, request, pk):
         user = request.user
-        recipe = Recipe.objects.get(id=pk)
         serializer = serializer_class(
-            data={'user': user.id, 'recipe': recipe.id},
+            data={'user': user.id, 'recipe': pk},
             context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()

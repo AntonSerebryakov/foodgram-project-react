@@ -2,7 +2,7 @@ import json
 
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
-from .models import Ingredient
+from recieps.models import Ingredient
 
 
 class Command(BaseCommand):

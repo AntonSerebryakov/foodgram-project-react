@@ -21,7 +21,7 @@ class Command(BaseCommand):
             for item in data:
                 try:
                     product = Ingredient(**item)
-                    product.full_clean()  # Проверка на валидность данных
+                    product.full_clean()
                     product.save()
                 except ValidationError as e:
                     self.stdout.write(self.style.ERROR(f'Error import {item}: '

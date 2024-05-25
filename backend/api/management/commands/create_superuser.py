@@ -2,7 +2,7 @@ import os
 
 from django.core.management.base import BaseCommand
 from dotenv import load_dotenv
-from users.models import CustomUser
+from users.models import User
 
 load_dotenv()
 
@@ -12,8 +12,8 @@ class Command(BaseCommand):
     ' variables if no superuser exists.'
 
     def handle(self, *args, **options):
-        if not CustomUser.objects.filter(is_superuser=True).exists():
-            CustomUser.objects.create_superuser(
+        if not User.objects.filter(is_superuser=True).exists():
+            User.objects.create_superuser(
                 username=os.getenv('DJANGO_SUPERUSER_USERNAME'),
                 email=os.getenv('DJANGO_SUPERUSER_EMAIL'),
                 password=os.getenv('DJANGO_SUPERUSER_PASSWORD'),

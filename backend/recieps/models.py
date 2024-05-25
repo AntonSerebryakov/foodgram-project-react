@@ -1,46 +1,21 @@
 from colorfield.fields import ColorField
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.utils import timezone
 
-from .constants import (MAX_EMAIL_LENGTH, MAX_FIRSTNAME_LENGTH,
-                        MAX_INGREDIENT_LENGTH, MAX_LASTNAME_LENGTH,
-                        MAX_MEASURMENT_UNIT_LENGTH, MAX_RECIPE_NAME_LENGTH,
-                        MAX_TAG_NAME_LENGTH, MAX_TAG_SLUG_LENGTH,
-                        MAX_USERNAME_LENGTH)
+from .constants import (MAX_INGREDIENT_LENGTH, MAX_MEASURMENT_UNIT_LENGTH,
+                        MAX_RECIPE_NAME_LENGTH, MAX_TAG_NAME_LENGTH,
+                        MAX_TAG_SLUG_LENGTH)
 
-
-class User(AbstractUser):
-    email = models.EmailField('email address',
-                              max_length=MAX_EMAIL_LENGTH,
-                              unique=True)
-    username = models.CharField('first name',
-                                max_length=MAX_USERNAME_LENGTH,
-                                blank=False,
-                                unique=True)
-    first_name = models.CharField('first name',
-                                  max_length=MAX_FIRSTNAME_LENGTH,
-                                  blank=False)
-    last_name = models.CharField('last name',
-                                 max_length=MAX_LASTNAME_LENGTH,
-                                 blank=False)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username', 'first_name', 'last_name',)
-
-    class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
-        ordering = ('username',)
-
-    def __str__(self):
-        return self.username
+User = get_user_model()
 
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=MAX_INGREDIENT_LENGTH, blank=False)
-    measurement_unit = models.CharField(max_length=MAX_MEASURMENT_UNIT_LENGTH, blank=False)
+    measurement_unit = models.CharField(max_length=MAX_MEASURMENT_UNIT_LENGTH,
+                                        blank=False)
 
     class Meta:
         verbose_name = 'Ингридиент'
@@ -107,33 +82,33 @@ class RecipeIngredient(models.Model):
     def __str__(self):
         return f'{self.ingredient.name} - {self.amount}'
 
-class SelectedRecipes(models.Model): 
+
+class SelectedRecipes(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE) 
-    
-    class Meta: 
-        ordering = ('user', 'recipe',) 
-        constraints = [ 
-            models.UniqueConstraint( 
-            fields=['recipe', 'user'],
-            name='unique_user_recipe',
-            ) 
-        ] 
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('user', 'recipe',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'user'],
+                name='unique_user_recipe',)
+        ]
         abstract = True
 
 
-class FavRecipes(SelectedRecipes): 
-    class Meta: 
-        default_related_name = 'favorites' 
+class FavRecipes(SelectedRecipes):
+    class Meta:
+        default_related_name = 'favorites'
         verbose_name = 'Избранные'
-        verbose_name_plural = 'Избранные' 
+        verbose_name_plural = 'Избранные'
 
 
-class ShoppingList(SelectedRecipes): 
-    class Meta: 
-        default_related_name = 'shoppinglist' 
-        verbose_name = 'Список покупок' 
-        verbose_name_plural = 'Список покупок' 
+class ShoppingList(SelectedRecipes):
+    class Meta:
+        default_related_name = 'shoppinglist'
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Список покупок'
 
 
 class Subscription(models.Model):
@@ -165,7 +140,7 @@ class Subscription(models.Model):
             models.CheckConstraint(
                 check=~models.Q(author=models.F('user')),
                 name='user_not_subscribe_self',
-            ),   
+            ),
         ]
 
     def __str__(self):

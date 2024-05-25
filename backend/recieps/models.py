@@ -35,11 +35,10 @@ class Ingredient(models.Model):
 class Tag(models.Model):
     name = models.CharField(max_length=MAX_TAG_NAME_LENGTH, unique=True)
     color = ColorField(default='#FFFFFF', verbose_name='Цвет')
-    slug = models.SlugField(
-               max_length=MAX_TAG_SLUG_LENGTH,
-               unique=True,
-               verbose_name='SLUG'
-           )
+    slug = models.SlugField(max_length=MAX_TAG_SLUG_LENGTH,
+                            unique=True,
+                            verbose_name='SLUG'
+                            )
 
     class Meta:
         verbose_name = 'Тэг'

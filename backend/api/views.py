@@ -61,7 +61,7 @@ class UserViewSet(AbstractUserViewSet):
     @action(
         detail=True,
         methods=('post', 'delete',),
-        permission_classes=[IsAuthenticated,],
+        permission_classes=(IsAuthenticated, ),
         serializer_class=SubscribeSerializer
     )
     def subscribe(self, request, id):
@@ -92,7 +92,7 @@ class UserViewSet(AbstractUserViewSet):
     @action(
         detail=False,
         methods=['GET'],
-        permission_classes=[IsAuthenticated],
+        permission_classes=(IsAuthenticated, ),
     )
     def me(self, request):
         serializer = self.get_serializer(request.user)
@@ -103,7 +103,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrReadOnly,)
     pagination_class = CustomPaginator
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
 
     def get_serializer_class(self):

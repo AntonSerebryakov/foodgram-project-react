@@ -103,5 +103,5 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 
 - Наполним базу данных базовыми ингредиентами из файла ingredients.json:
 ```
-sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_ingredients data/ingredients.json
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_ingredients
 ```

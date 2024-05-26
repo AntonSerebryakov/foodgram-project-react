@@ -6,7 +6,7 @@ from users.models import Subscription
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'author', 'get_favorite_count')
+    list_display = ('name', 'author', 'get_favorites_count')
     list_filter = ('name', 'author', 'tags')
 
     def get_favorites_count(self, obj):

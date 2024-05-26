@@ -12,7 +12,7 @@ class User(AbstractUser):
                               max_length=MAX_EMAIL_LENGTH,
                               unique=True)
     username = models.CharField(
-        'first name',
+        'username',
         max_length=MAX_USERNAME_LENGTH,
         blank=False,
         unique=True,

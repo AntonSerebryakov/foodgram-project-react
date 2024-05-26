@@ -9,10 +9,10 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'get_favorite_count')
     list_filter = ('name', 'author', 'tags')
 
-    def get_favorite_count(self, obj):
-        return obj.favorites_set.count()
-
-    get_favorite_count.short_description = 'Число избранного'
+    def get_favorites_count(self, obj):
+        return FavoriteRecipes.objects.filter(recipe=obj).count()
+    
+    get_favorites_count.short_description = 'Число избранного'
 
 
 class IngredientAdmin(admin.ModelAdmin):

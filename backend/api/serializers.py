@@ -125,6 +125,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
 
+    def validate_image(self, value):
+        if not value:
+            raise serializers.ValidationError('Изображение не предоставлено.')
+        return value
+
     def validate(self, data):
         ingredients = data.get('ingredients')
         if not ingredients:
@@ -140,10 +145,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Теги отсутствуют')
         if len(tags) != len(set(tags)):
             raise serializers.ValidationError('Теги повторя.тся')
-        image = data.get('image')
-        if not image:
-            raise serializers.ValidationError('Изображение не предоставлено.')
-
         return data
 
     @transaction.atomic

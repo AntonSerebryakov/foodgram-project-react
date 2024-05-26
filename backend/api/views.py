@@ -49,7 +49,7 @@ class UserViewSet(AbstractUserViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-        authors = User.objects.filter(subscriber__user=user)
+        authors = User.objects.filter(user__subscriber=user)
         paginated_queryset = self.paginate_queryset(authors)
         serializer = UserSubscribesSerializer(
             paginated_queryset,
